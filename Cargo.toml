@@ -1,0 +1,16 @@
+[package]
+edition = "2018"
+publish = false
+name = "pentomino101"
+version = "0.0.0"
+authors = ["Dmytro Meleshko <dmytro.meleshko@gmail.com>"]
+description = "Simple tiling puzzle game"
+license = "MIT"
+repository = "https://github.com/dmitmel/pentomino101.git"
+homepage = "https://github.com/dmitmel/pentomino101"
+
+[dependencies]
+env_logger = "*"
+failure = "*"
+log = "*"
+sdl2 = "*"
