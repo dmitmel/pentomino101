@@ -6,8 +6,10 @@ use std::time::Instant;
 
 use sdl2::event::Event;
 use sdl2::keyboard::Keycode;
+use sdl2::pixels::Color;
 
 mod game;
+mod grid;
 
 type Time = f64;
 
@@ -59,6 +61,8 @@ fn main() {
         update_lag -= SECONDS_PER_FRAME;
       }
 
+      canvas.set_draw_color(Color::RGB(0, 0, 0));
+      canvas.clear();
       game.render(&mut canvas);
       canvas.present();
     }
