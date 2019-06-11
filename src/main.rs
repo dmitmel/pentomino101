@@ -1,5 +1,6 @@
 #![feature(duration_float)]
 
+extern crate nalgebra_glm as glm;
 extern crate sdl2;
 
 use std::time::Instant;
