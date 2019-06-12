@@ -30,12 +30,10 @@ impl Grid {
       for row in 0..self.rows {
         canvas
           .draw_rect(Rect::new(
-            render_area.x()
-              + (offset_x + f64::from(col) * scale).round() as i32,
-            render_area.y()
-              + (offset_y + f64::from(row) * scale).round() as i32,
-            scale.round() as u32,
-            scale.round() as u32,
+            render_area.x() + math::f_to_i(offset_x + f64::from(col) * scale),
+            render_area.y() + math::f_to_i(offset_y + f64::from(row) * scale),
+            math::f_to_u(scale),
+            math::f_to_u(scale),
           ))
           .unwrap();
       }

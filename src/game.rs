@@ -29,10 +29,10 @@ impl Game {
     self.grid.render(
       canvas,
       Rect::new(
-        grid_offset_x.round() as i32,
-        grid_offset_y.round() as i32,
-        grid_size.round() as u32,
-        grid_size.round() as u32,
+        math::f_to_i(grid_offset_x),
+        math::f_to_i(grid_offset_y),
+        math::f_to_u(grid_size),
+        math::f_to_u(grid_size),
       ),
     );
   }

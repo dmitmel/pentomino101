@@ -1,3 +1,6 @@
+pub fn f_to_u(val: f64) -> u32 { val.round() as u32 }
+pub fn f_to_i(val: f64) -> i32 { val.round() as i32 }
+
 pub fn best_fit_inside(
   a_width: u32,
   a_height: u32,
