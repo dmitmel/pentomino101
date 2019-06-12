@@ -11,6 +11,7 @@ use sdl2::pixels::Color;
 
 mod game;
 mod grid;
+mod math;
 
 type Time = f64;
 
