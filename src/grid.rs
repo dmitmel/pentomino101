@@ -43,23 +43,24 @@ pub struct Grid {
 
 impl Grid {
   pub fn new(cols: usize, rows: usize) -> Self {
-    use rand::distributions::{Distribution, Uniform};
-
-    let cols_distribution = Uniform::from(0..cols);
-    let rows_distribution = Uniform::from(0..rows);
-    let colors_distribution = Uniform::from(0..CELL_COLORS.len() as u8);
-
     let mut cells = vec![None; cols * rows];
-    let mut rng = rand::thread_rng();
-    for _ in 0..16 {
-      let row = rows_distribution.sample(&mut rng);
-      let col = cols_distribution.sample(&mut rng);
-      let color = colors_distribution.sample(&mut rng);
-      cells[row * cols + col] = Some(Cell { color });
-    }
 
-    for i in 0..CELL_COLORS.len() {
-      cells[i] = Some(Cell { color: i as u8 });
+    let square: Vec<u8> = vec![
+      0,  0,  1,  1,  1,  1,  1,  2,
+      0,  0,  0,  3,  3,  2,  2,  2,
+      4,  4,  4,  4,  3,  3,  7,  2,
+      5,  5,  4, 99, 99,  3,  7,  7,
+      9,  5,  5, 99, 99,  6,  6,  7,
+      9,  5, 10, 11, 11,  8,  6,  7,
+      9, 10, 10, 10, 11,  8,  6,  6,
+      9,  9, 10, 11, 11,  8,  8,  8,
+    ];
+    for (index, color) in square.into_iter().enumerate() {
+      if (color as usize) < CELL_COLORS.len() {
+        let col = index % 8;
+        let row = index / 8;
+        cells[col + cols * row] = Some(Cell { color });
+      }
     }
 
     Self {
