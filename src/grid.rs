@@ -29,29 +29,32 @@ pub struct Cell {
 }
 
 pub struct Grid {
-  cols: u8,
-  rows: u8,
+  cols: usize,
+  rows: usize,
   cells: Vec<Option<Cell>>,
 
   cells_rect: Rect,
   cell_size: f64,
+
+  current_cell: Option<Cell>,
+  current_cell_pos: Point,
 }
 
 impl Grid {
-  pub fn new(cols: u8, rows: u8) -> Self {
+  pub fn new(cols: usize, rows: usize) -> Self {
     use rand::distributions::{Distribution, Uniform};
 
     let cols_distribution = Uniform::from(0..cols);
     let rows_distribution = Uniform::from(0..rows);
     let colors_distribution = Uniform::from(0..CELL_COLORS.len() as u8);
 
-    let mut cells = vec![None; cols as usize * rows as usize];
+    let mut cells = vec![None; cols * rows];
     let mut rng = rand::thread_rng();
     for _ in 0..16 {
       let row = rows_distribution.sample(&mut rng);
       let col = cols_distribution.sample(&mut rng);
       let color = colors_distribution.sample(&mut rng);
-      cells[row as usize * cols as usize + col as usize] = Some(Cell { color });
+      cells[row * cols + col] = Some(Cell { color });
     }
 
     Self {
@@ -61,6 +64,9 @@ impl Grid {
 
       cells_rect: Rect::new(0, 0, 0, 0),
       cell_size: 0.0,
+
+      current_cell: None,
+      current_cell_pos: Point::new(0, 0),
     }
   }
 
@@ -70,8 +76,8 @@ impl Grid {
     let (padding_x, padding_y, scale) = math::best_fit_inside(
       bounding_box.width(),
       bounding_box.height(),
-      u32::from(self.cols),
-      u32::from(self.rows),
+      self.cols as u32,
+      self.rows as u32,
     );
 
     self.cell_size = scale;
@@ -79,20 +85,19 @@ impl Grid {
     self.cells_rect = Rect::new(
       bounding_box.x() + math::f_to_i(padding_x),
       bounding_box.y() + math::f_to_i(padding_y),
-      math::f_to_u(f64::from(self.cols) * self.cell_size),
-      math::f_to_u(f64::from(self.rows) * self.cell_size),
+      math::f_to_u(self.cols as f64 * self.cell_size),
+      math::f_to_u(self.rows as f64 * self.cell_size),
     );
   }
 
   pub fn render(&self, canvas: &mut WindowCanvas) {
     for row in 0..self.rows {
       for col in 0..self.cols {
-        let cell =
-          &self.cells[row as usize * self.cols as usize + col as usize];
+        let cell = &self.cells[row * self.cols + col];
 
         let rect = Rect::new(
-          self.cells_rect.x() + math::f_to_i(f64::from(col) * self.cell_size),
-          self.cells_rect.y() + math::f_to_i(f64::from(row) * self.cell_size),
+          self.cells_rect.x() + math::f_to_i(col as f64 * self.cell_size),
+          self.cells_rect.y() + math::f_to_i(row as f64 * self.cell_size),
           math::f_to_u(self.cell_size),
           math::f_to_u(self.cell_size),
         );
@@ -106,23 +111,51 @@ impl Grid {
         }
       }
     }
+
+    if let Some(Cell { color }) = self.current_cell {
+      canvas.set_draw_color(CELL_COLORS[color as usize]);
+      canvas
+        .fill_rect(Rect::new(
+          self.current_cell_pos.x,
+          self.current_cell_pos.y,
+          math::f_to_u(self.cell_size),
+          math::f_to_u(self.cell_size),
+        ))
+        .unwrap();
+    }
   }
 
   pub fn update(&mut self, delta_time: Time) {}
 
   pub fn handle_event(&mut self, event: Event) {
-    if let Event::MouseButtonDown {
-      mouse_btn: MouseButton::Left, x, y, ..
-    } = event
-    {
-      if self.cells_rect.contains_point(Point::new(x, y)) {
-        let cell_x = (x - self.cells_rect.x()) / math::f_to_i(self.cell_size);
-        let cell_y = (y - self.cells_rect.y()) / math::f_to_i(self.cell_size);
-        if let Some(cell) =
-          &self.cells[cell_y as usize * self.cols as usize + cell_x as usize]
-        {
+    match event {
+      Event::MouseButtonDown { mouse_btn: MouseButton::Left, x, y, .. } => {
+        if self.cells_rect.contains_point(Point::new(x, y)) {
+          let (cell_x, cell_y) = self.screen_to_grid_coords(x, y);
+          let cell_index = cell_y * self.cols + cell_x;
+
+          if self.current_cell.is_none() {
+            if let Some(cell) = self.cells[cell_index].take() {
+              self.current_cell = Some(cell);
+            }
+          } else if self.cells[cell_index].is_none() {
+            if let Some(current_cell) = self.current_cell.take() {
+              self.cells[cell_index] = Some(current_cell);
+            }
+          }
         }
       }
+
+      Event::MouseMotion { x, y, .. } => {
+        self.current_cell_pos = Point::new(x, y);
+      }
+      _ => {}
     }
+  }
+
+  fn screen_to_grid_coords(&self, x: i32, y: i32) -> (usize, usize) {
+    let cell_x = (x - self.cells_rect.x()) / math::f_to_i(self.cell_size);
+    let cell_y = (y - self.cells_rect.y()) / math::f_to_i(self.cell_size);
+    (cell_x as usize, cell_y as usize)
   }
 }
