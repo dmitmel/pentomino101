@@ -1,6 +1,7 @@
 use sdl2::event::Event;
+use sdl2::mouse::MouseButton;
 use sdl2::pixels::Color;
-use sdl2::rect::Rect;
+use sdl2::rect::{Point, Rect};
 use sdl2::render::WindowCanvas;
 
 use crate::math;
@@ -32,9 +33,7 @@ pub struct Grid {
   rows: u8,
   cells: Vec<Option<Cell>>,
 
-  bounding_box: Rect,
-  padding_x: f64,
-  padding_y: f64,
+  cells_rect: Rect,
   cell_size: f64,
 }
 
@@ -60,14 +59,14 @@ impl Grid {
       rows,
       cells,
 
-      bounding_box: Rect::new(0, 0, 0, 0),
-      padding_x: 0.0,
-      padding_y: 0.0,
+      cells_rect: Rect::new(0, 0, 0, 0),
       cell_size: 0.0,
     }
   }
 
   pub fn calculate_layout(&mut self, bounding_box: Rect) {
+    self.cells_rect = bounding_box;
+
     let (padding_x, padding_y, scale) = math::best_fit_inside(
       bounding_box.width(),
       bounding_box.height(),
@@ -75,10 +74,14 @@ impl Grid {
       u32::from(self.rows),
     );
 
-    self.bounding_box = bounding_box;
-    self.padding_x = padding_x;
-    self.padding_y = padding_y;
     self.cell_size = scale;
+
+    self.cells_rect = Rect::new(
+      bounding_box.x() + math::f_to_i(padding_x),
+      bounding_box.y() + math::f_to_i(padding_y),
+      math::f_to_u(f64::from(self.cols) * self.cell_size),
+      math::f_to_u(f64::from(self.rows) * self.cell_size),
+    );
   }
 
   pub fn render(&self, canvas: &mut WindowCanvas) {
@@ -88,10 +91,8 @@ impl Grid {
           &self.cells[row as usize * self.cols as usize + col as usize];
 
         let rect = Rect::new(
-          self.bounding_box.x()
-            + math::f_to_i(self.padding_x + f64::from(col) * self.cell_size),
-          self.bounding_box.y()
-            + math::f_to_i(self.padding_y + f64::from(row) * self.cell_size),
+          self.cells_rect.x() + math::f_to_i(f64::from(col) * self.cell_size),
+          self.cells_rect.y() + math::f_to_i(f64::from(row) * self.cell_size),
           math::f_to_u(self.cell_size),
           math::f_to_u(self.cell_size),
         );
@@ -109,5 +110,19 @@ impl Grid {
 
   pub fn update(&mut self, delta_time: Time) {}
 
-  pub fn handle_event(&mut self, event: Event) {}
+  pub fn handle_event(&mut self, event: Event) {
+    if let Event::MouseButtonDown {
+      mouse_btn: MouseButton::Left, x, y, ..
+    } = event
+    {
+      if self.cells_rect.contains_point(Point::new(x, y)) {
+        let cell_x = (x - self.cells_rect.x()) / math::f_to_i(self.cell_size);
+        let cell_y = (y - self.cells_rect.y()) / math::f_to_i(self.cell_size);
+        if let Some(cell) =
+          &self.cells[cell_y as usize * self.cols as usize + cell_x as usize]
+        {
+        }
+      }
+    }
+  }
 }
