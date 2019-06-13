@@ -36,15 +36,14 @@ pub struct Grid {
   cells_rect: Rect,
   cell_size: f64,
 
-  current_cell: Option<Cell>,
-  cursor_pos: Point,
-  click_offset: Point,
+  current_cell: Option<(Cell, Point)>,
 }
 
 impl Grid {
   pub fn new(cols: usize, rows: usize) -> Self {
     let mut cells = vec![None; cols * rows];
 
+    #[rustfmt::skip]
     let square: Vec<u8> = vec![
       0,  0,  1,  1,  1,  1,  1,  2,
       0,  0,  0,  3,  3,  2,  2,  2,
@@ -72,8 +71,6 @@ impl Grid {
       cell_size: 0.0,
 
       current_cell: None,
-      cursor_pos: Point::new(0, 0),
-      click_offset: Point::new(0, 0),
     }
   }
 
@@ -119,12 +116,12 @@ impl Grid {
       }
     }
 
-    if let Some(Cell { color }) = self.current_cell {
+    if let Some((Cell { color }, point)) = self.current_cell {
       canvas.set_draw_color(CELL_COLORS[color as usize]);
       canvas
         .fill_rect(Rect::new(
-          self.cursor_pos.x + self.click_offset.x,
-          self.cursor_pos.y + self.click_offset.y,
+          point.x(),
+          point.y(),
           math::f_to_u(self.cell_size),
           math::f_to_u(self.cell_size),
         ))
@@ -141,26 +138,27 @@ impl Grid {
           let (col, row) = self.screen_to_grid_coords(x, y);
           let cell_index = row * self.cols + col;
 
-          let (cell_x, cell_y) = (
+          let cell_pos = Point::new(
             self.cells_rect.x() + math::f_to_i(col as f64 * self.cell_size),
             self.cells_rect.y() + math::f_to_i(row as f64 * self.cell_size),
           );
-          self.click_offset = Point::new(cell_x - x, cell_y - y);
 
           if self.current_cell.is_none() {
             if let Some(cell) = self.cells[cell_index].take() {
-              self.current_cell = Some(cell);
+              self.current_cell = Some((cell, cell_pos));
             }
           } else if self.cells[cell_index].is_none() {
-            if let Some(current_cell) = self.current_cell.take() {
+            if let Some((current_cell, _)) = self.current_cell.take() {
               self.cells[cell_index] = Some(current_cell);
             }
           }
         }
       }
 
-      Event::MouseMotion { x, y, .. } => {
-        self.cursor_pos = Point::new(x, y);
+      Event::MouseMotion { xrel, yrel, .. } => {
+        if let Some((_, cell_pos)) = self.current_cell.as_mut() {
+          *cell_pos += Point::new(xrel, yrel);
+        }
       }
 
       _ => {}
