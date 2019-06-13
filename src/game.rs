@@ -10,32 +10,34 @@ const GRID_MARGIN_PERCENT: f64 = 0.1;
 
 pub struct Game {
   grid: Grid,
+  grid_rect: Rect,
 }
 
 impl Game {
-  pub fn new() -> Self { Self { grid: Grid::new(10, 20) } }
+  pub fn new() -> Self {
+    Self { grid: Grid::new(20, 10), grid_rect: Rect::new(0, 0, 0, 0) }
+  }
 
-  pub fn render(&self, canvas: &mut WindowCanvas) {
-    let (window_width, window_height) = canvas.window().size();
-
+  pub fn calculate_layout(&mut self, bounding_box: Rect) {
     let (mut grid_offset_x, mut grid_offset_y, mut grid_size) =
-      math::best_fit_inside(window_width, window_height, 1, 1);
+      math::best_fit_inside(bounding_box.width(), bounding_box.height(), 1, 1);
 
     let grid_margin = grid_size * GRID_MARGIN_PERCENT;
     grid_size -= grid_margin * 2.0;
     grid_offset_x += grid_margin;
     grid_offset_y += grid_margin;
 
-    self.grid.render(
-      canvas,
-      Rect::new(
-        math::f_to_i(grid_offset_x),
-        math::f_to_i(grid_offset_y),
-        math::f_to_u(grid_size),
-        math::f_to_u(grid_size),
-      ),
+    self.grid_rect = Rect::new(
+      bounding_box.x() + math::f_to_i(grid_offset_x),
+      bounding_box.y() + math::f_to_i(grid_offset_y),
+      math::f_to_u(grid_size),
+      math::f_to_u(grid_size),
     );
+
+    self.grid.calculate_layout(self.grid_rect);
   }
+
+  pub fn render(&self, canvas: &mut WindowCanvas) { self.grid.render(canvas); }
 
   pub fn update(&mut self, delta_time: Time) { self.grid.update(delta_time); }
 

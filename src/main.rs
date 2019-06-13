@@ -6,17 +6,16 @@ extern crate sdl2;
 
 use std::time::Instant;
 
-use sdl2::event::Event;
+use sdl2::event::{Event, WindowEvent};
 use sdl2::keyboard::Keycode;
-use sdl2::pixels::Color;
 use sdl2::rect::Rect;
 
 macro_rules! color {
   ($r:expr, $g:expr, $b:expr $(,)?) => {
-    Color { r: $r, g: $g, b: $b, a: 0xFF }
+    ::sdl2::pixels::Color { r: $r, g: $g, b: $b, a: 0xFF }
   };
   ($r:expr, $g:expr, $b:expr, $a:expr $(,)?) => {
-    Color { r: $r, g: $g, b: $b, a: $a }
+    ::sdl2::pixels::Color { r: $r, g: $g, b: $b, a: $a }
   };
 }
 
@@ -48,6 +47,10 @@ fn main() {
   let mut event_pump = sdl_context.event_pump().unwrap();
 
   let mut game = game::Game::new();
+  {
+    let (window_width, window_height) = canvas.window().size();
+    game.calculate_layout(Rect::new(0, 0, window_width, window_height));
+  }
 
   let mut prev_time = Instant::now();
   let mut update_lag: Time = 0.0;
@@ -65,8 +68,15 @@ fn main() {
           | Event::KeyDown { keycode: Some(Keycode::Escape), .. } => {
             break 'game_loop
           }
-          _ => game.handle_event(event),
+          Event::Window {
+            win_event: WindowEvent::SizeChanged(width, height),
+            ..
+          } => {
+            game.calculate_layout(Rect::new(0, 0, width as u32, height as u32))
+          }
+          _ => {}
         }
+        game.handle_event(event);
       }
 
       while update_lag >= SECONDS_PER_FRAME {

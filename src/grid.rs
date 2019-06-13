@@ -31,6 +31,11 @@ pub struct Grid {
   cols: u8,
   rows: u8,
   cells: Vec<Option<Cell>>,
+
+  bounding_box: Rect,
+  padding_x: f64,
+  padding_y: f64,
+  cell_size: f64,
 }
 
 impl Grid {
@@ -50,28 +55,45 @@ impl Grid {
       cells[row as usize * cols as usize + col as usize] = Some(Cell { color });
     }
 
-    // Self { cols, rows, cells: vec![None; cols as usize * rows as usize] }
-    Self { cols, rows, cells }
+    Self {
+      cols,
+      rows,
+      cells,
+
+      bounding_box: Rect::new(0, 0, 0, 0),
+      padding_x: 0.0,
+      padding_y: 0.0,
+      cell_size: 0.0,
+    }
   }
 
-  pub fn render(&self, canvas: &mut WindowCanvas, render_area: Rect) {
-    let (offset_x, offset_y, scale) = math::best_fit_inside(
-      render_area.width(),
-      render_area.height(),
+  pub fn calculate_layout(&mut self, bounding_box: Rect) {
+    let (padding_x, padding_y, scale) = math::best_fit_inside(
+      bounding_box.width(),
+      bounding_box.height(),
       u32::from(self.cols),
       u32::from(self.rows),
     );
 
+    self.bounding_box = bounding_box;
+    self.padding_x = padding_x;
+    self.padding_y = padding_y;
+    self.cell_size = scale;
+  }
+
+  pub fn render(&self, canvas: &mut WindowCanvas) {
     for row in 0..self.rows {
       for col in 0..self.cols {
         let cell =
           &self.cells[row as usize * self.cols as usize + col as usize];
 
         let rect = Rect::new(
-          render_area.x() + math::f_to_i(offset_x + f64::from(col) * scale),
-          render_area.y() + math::f_to_i(offset_y + f64::from(row) * scale),
-          math::f_to_u(scale),
-          math::f_to_u(scale),
+          self.bounding_box.x()
+            + math::f_to_i(self.padding_x + f64::from(col) * self.cell_size),
+          self.bounding_box.y()
+            + math::f_to_i(self.padding_y + f64::from(row) * self.cell_size),
+          math::f_to_u(self.cell_size),
+          math::f_to_u(self.cell_size),
         );
 
         if let Some(Cell { color }) = cell {
