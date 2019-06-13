@@ -37,7 +37,8 @@ pub struct Grid {
   cell_size: f64,
 
   current_cell: Option<Cell>,
-  current_cell_pos: Point,
+  cursor_pos: Point,
+  click_offset: Point,
 }
 
 impl Grid {
@@ -66,7 +67,8 @@ impl Grid {
       cell_size: 0.0,
 
       current_cell: None,
-      current_cell_pos: Point::new(0, 0),
+      cursor_pos: Point::new(0, 0),
+      click_offset: Point::new(0, 0),
     }
   }
 
@@ -116,8 +118,8 @@ impl Grid {
       canvas.set_draw_color(CELL_COLORS[color as usize]);
       canvas
         .fill_rect(Rect::new(
-          self.current_cell_pos.x,
-          self.current_cell_pos.y,
+          self.cursor_pos.x + self.click_offset.x,
+          self.cursor_pos.y + self.click_offset.y,
           math::f_to_u(self.cell_size),
           math::f_to_u(self.cell_size),
         ))
@@ -131,8 +133,14 @@ impl Grid {
     match event {
       Event::MouseButtonDown { mouse_btn: MouseButton::Left, x, y, .. } => {
         if self.cells_rect.contains_point(Point::new(x, y)) {
-          let (cell_x, cell_y) = self.screen_to_grid_coords(x, y);
-          let cell_index = cell_y * self.cols + cell_x;
+          let (col, row) = self.screen_to_grid_coords(x, y);
+          let cell_index = row * self.cols + col;
+
+          let (cell_x, cell_y) = (
+            self.cells_rect.x() + math::f_to_i(col as f64 * self.cell_size),
+            self.cells_rect.y() + math::f_to_i(row as f64 * self.cell_size),
+          );
+          self.click_offset = Point::new(cell_x - x, cell_y - y);
 
           if self.current_cell.is_none() {
             if let Some(cell) = self.cells[cell_index].take() {
@@ -147,15 +155,16 @@ impl Grid {
       }
 
       Event::MouseMotion { x, y, .. } => {
-        self.current_cell_pos = Point::new(x, y);
+        self.cursor_pos = Point::new(x, y);
       }
+
       _ => {}
     }
   }
 
   fn screen_to_grid_coords(&self, x: i32, y: i32) -> (usize, usize) {
-    let cell_x = (x - self.cells_rect.x()) / math::f_to_i(self.cell_size);
-    let cell_y = (y - self.cells_rect.y()) / math::f_to_i(self.cell_size);
-    (cell_x as usize, cell_y as usize)
+    let col = (x - self.cells_rect.x()) / math::f_to_i(self.cell_size);
+    let row = (y - self.cells_rect.y()) / math::f_to_i(self.cell_size);
+    (col as usize, row as usize)
   }
 }
