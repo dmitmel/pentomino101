@@ -7,20 +7,20 @@ use sdl2::render::WindowCanvas;
 use crate::math;
 use crate::Time;
 
-const CELL_BORDER_COLOR: Color = color!(0x66, 0x66, 0x66);
+const CELL_BORDER_COLOR: Color = color!(167, 172, 216);
 const CELL_COLORS: [Color; 12] = [
-  color!(238, 170, 170),
-  color!(221, 187, 153),
-  color!(204, 204, 136),
-  color!(187, 221, 153),
-  color!(170, 238, 170),
-  color!(153, 221, 187),
-  color!(136, 204, 204),
-  color!(153, 187, 221),
-  color!(170, 170, 238),
-  color!(187, 153, 221),
-  color!(204, 136, 204),
-  color!(221, 153, 187),
+  color!(244, 67, 54),
+  color!(255, 152, 0),
+  color!(255, 193, 7),
+  color!(205, 220, 57),
+  color!(139, 195, 74),
+  color!(76, 175, 80),
+  color!(0, 150, 136),
+  color!(33, 150, 243),
+  color!(63, 81, 181),
+  color!(103, 58, 183),
+  color!(156, 39, 176),
+  color!(96, 125, 139),
 ];
 
 #[derive(Clone)]
@@ -56,6 +56,10 @@ impl Grid {
       let col = cols_distribution.sample(&mut rng);
       let color = colors_distribution.sample(&mut rng);
       cells[row * cols + col] = Some(Cell { color });
+    }
+
+    for i in 0..CELL_COLORS.len() {
+      cells[i] = Some(Cell { color: i as u8 });
     }
 
     Self {

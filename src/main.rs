@@ -9,6 +9,7 @@ use std::time::Instant;
 use sdl2::event::{Event, WindowEvent};
 use sdl2::keyboard::Keycode;
 use sdl2::rect::Rect;
+use sdl2::pixels::Color;
 
 macro_rules! color {
   ($r:expr, $g:expr, $b:expr $(,)?) => {
@@ -31,6 +32,8 @@ const SECONDS_PER_FRAME: Time = 1.0 / MAX_FPS;
 const WINDOW_TITLE: &str = env!("CARGO_PKG_NAME");
 const DEFAULT_WINDOW_WIDTH: u32 = 800;
 const DEFAULT_WINDOW_HEIGHT: u32 = 600;
+
+const BACKGROUND_COLOR: Color = color!(250, 243, 235);
 
 fn main() {
   let sdl_context = sdl2::init().unwrap();
@@ -84,7 +87,7 @@ fn main() {
         update_lag -= SECONDS_PER_FRAME;
       }
 
-      canvas.set_draw_color(color!(0, 0, 0));
+      canvas.set_draw_color(BACKGROUND_COLOR);
       canvas.clear();
       game.render(&mut canvas);
       canvas.present();
