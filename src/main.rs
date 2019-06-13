@@ -1,6 +1,7 @@
 #![feature(duration_float)]
 
 extern crate nalgebra_glm as glm;
+extern crate rand;
 extern crate sdl2;
 
 use std::time::Instant;
@@ -8,6 +9,16 @@ use std::time::Instant;
 use sdl2::event::Event;
 use sdl2::keyboard::Keycode;
 use sdl2::pixels::Color;
+use sdl2::rect::Rect;
+
+macro_rules! color {
+  ($r:expr, $g:expr, $b:expr $(,)?) => {
+    Color { r: $r, g: $g, b: $b, a: 0xFF }
+  };
+  ($r:expr, $g:expr, $b:expr, $a:expr $(,)?) => {
+    Color { r: $r, g: $g, b: $b, a: $a }
+  };
+}
 
 mod game;
 mod grid;
@@ -63,7 +74,7 @@ fn main() {
         update_lag -= SECONDS_PER_FRAME;
       }
 
-      canvas.set_draw_color(Color::RGB(0, 0, 0));
+      canvas.set_draw_color(color!(0, 0, 0));
       canvas.clear();
       game.render(&mut canvas);
       canvas.present();
