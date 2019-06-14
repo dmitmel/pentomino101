@@ -15,7 +15,7 @@ pub struct Game {
 
 impl Game {
   pub fn new() -> Self {
-    Self { grid: Grid::new(20, 10), grid_rect: Rect::new(0, 0, 0, 0) }
+    Self { grid: Grid::new(20, 20), grid_rect: Rect::new(0, 0, 0, 0) }
   }
 
   pub fn calculate_layout(&mut self, bounding_box: Rect) {

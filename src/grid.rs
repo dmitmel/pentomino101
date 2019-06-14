@@ -1,4 +1,5 @@
 use sdl2::event::Event;
+use sdl2::keyboard::{Keycode, Mod};
 use sdl2::mouse::MouseButton;
 use sdl2::pixels::Color;
 use sdl2::rect::{Point, Rect};
@@ -37,6 +38,8 @@ pub struct Grid {
   cell_size: f64,
 
   current_cells: Option<Vec<(Cell, Point)>>,
+
+  cursor_pos: Point,
 }
 
 impl Grid {
@@ -50,6 +53,8 @@ impl Grid {
       cell_size: 0.0,
 
       current_cells: None,
+
+      cursor_pos: Point::new(0, 0),
     };
 
 
@@ -194,10 +199,36 @@ impl Grid {
         }
       }
 
-      Event::MouseMotion { xrel, yrel, .. } => {
+      Event::MouseMotion { x, y, xrel, yrel, .. } => {
+        self.cursor_pos = Point::new(x, y);
+
         if let Some(current_cells) = self.current_cells.as_mut() {
           for (_, cell_pos) in current_cells {
             *cell_pos += Point::new(xrel, yrel);
+          }
+        }
+      }
+
+      Event::KeyDown { keycode: Some(keycode), keymod, .. } => {
+        if let Some(current_cells) = self.current_cells.as_mut() {
+          for (_, cell_pos) in current_cells {
+            *cell_pos -= self.cursor_pos;
+            *cell_pos = match (keycode, keymod) {
+              (Keycode::R, Mod::NOMOD) => {
+                Point::new(-cell_pos.y(), cell_pos.x())
+              }
+              (Keycode::R, Mod::LSHIFTMOD) | (Keycode::R, Mod::RSHIFTMOD) => {
+                Point::new(cell_pos.y(), -cell_pos.x())
+              }
+              (Keycode::H, Mod::NOMOD) => {
+                Point::new(-cell_pos.x(), cell_pos.y())
+              }
+              (Keycode::V, Mod::NOMOD) => {
+                Point::new(cell_pos.x(), -cell_pos.y())
+              }
+              _ => *cell_pos,
+            };
+            *cell_pos += self.cursor_pos;
           }
         }
       }
