@@ -216,10 +216,10 @@ impl Grid {
               (Keycode::R, Mod::LSHIFTMOD) | (Keycode::R, Mod::RSHIFTMOD) => {
                 Point::new(cell_pos.y(), -cell_pos.x())
               }
-              (Keycode::H, Mod::NOMOD) => {
+              (Keycode::V, Mod::NOMOD) => {
                 Point::new(-cell_pos.x(), cell_pos.y())
               }
-              (Keycode::V, Mod::NOMOD) => {
+              (Keycode::H, Mod::NOMOD) => {
                 Point::new(cell_pos.x(), -cell_pos.y())
               }
               _ => *cell_pos,
