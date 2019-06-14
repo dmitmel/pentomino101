@@ -57,7 +57,6 @@ impl Grid {
       cursor_pos: Point::new(0, 0),
     };
 
-
     #[rustfmt::skip]
     let square: Vec<u8> = vec![
       0,  0,  1,  1,  1,  1,  1,  2,
@@ -123,11 +122,11 @@ impl Grid {
     }
 
     if let Some(current_cells) = &self.current_cells {
-      for (Cell { color }, pos) in current_cells {
+      for (Cell { color }, offset) in current_cells {
         canvas.set_draw_color(CELL_COLORS[*color as usize]);
         canvas
           .fill_rect(Rect::from_center(
-            *pos,
+            self.cursor_pos + *offset,
             math::f_to_u(self.cell_size),
             math::f_to_u(self.cell_size),
           ))
@@ -161,11 +160,12 @@ impl Grid {
                   self.cells_rect.y()
                     + math::f_to_i((row as f64 + 0.5) * self.cell_size),
                 );
+                let cell_offset = cell_pos - self.cursor_pos;
 
                 let cell = self.cell_mut(col, row);
                 if let Some(Cell { color }) = cell {
                   if *color == clicked_cell_color {
-                    current_cells.push((cell.take().unwrap(), cell_pos));
+                    current_cells.push((cell.take().unwrap(), cell_offset));
                   }
                 }
               }
@@ -175,13 +175,15 @@ impl Grid {
           } else if clicked_cell.is_none() && self.current_cells.is_some() {
             let mut cells_can_be_placed = true;
 
-            for (_, cell_pos) in self.current_cells.as_ref().unwrap() {
-              if !self.cells_rect.contains_point(*cell_pos) {
+            for (_, cell_offset) in self.current_cells.as_ref().unwrap() {
+              let cell_pos = self.cursor_pos + *cell_offset;
+
+              if !self.cells_rect.contains_point(cell_pos) {
                 cells_can_be_placed = false;
                 break;
               }
 
-              let (cell_col, cell_row) = self.screen_to_grid_coords(*cell_pos);
+              let (cell_col, cell_row) = self.screen_to_grid_coords(cell_pos);
               let cell_on_grid = self.cell(cell_col, cell_row);
               if cell_on_grid.is_some() {
                 cells_can_be_placed = false;
@@ -190,7 +192,8 @@ impl Grid {
             }
 
             if cells_can_be_placed {
-              for (cell, cell_pos) in self.current_cells.take().unwrap() {
+              for (cell, cell_offset) in self.current_cells.take().unwrap() {
+                let cell_pos = self.cursor_pos + cell_offset;
                 let (cell_col, cell_row) = self.screen_to_grid_coords(cell_pos);
                 *self.cell_mut(cell_col, cell_row) = Some(cell);
               }
@@ -199,20 +202,13 @@ impl Grid {
         }
       }
 
-      Event::MouseMotion { x, y, xrel, yrel, .. } => {
+      Event::MouseMotion { x, y, .. } => {
         self.cursor_pos = Point::new(x, y);
-
-        if let Some(current_cells) = self.current_cells.as_mut() {
-          for (_, cell_pos) in current_cells {
-            *cell_pos += Point::new(xrel, yrel);
-          }
-        }
       }
 
       Event::KeyDown { keycode: Some(keycode), keymod, .. } => {
         if let Some(current_cells) = self.current_cells.as_mut() {
           for (_, cell_pos) in current_cells {
-            *cell_pos -= self.cursor_pos;
             *cell_pos = match (keycode, keymod) {
               (Keycode::R, Mod::NOMOD) => {
                 Point::new(-cell_pos.y(), cell_pos.x())
@@ -228,7 +224,6 @@ impl Grid {
               }
               _ => *cell_pos,
             };
-            *cell_pos += self.cursor_pos;
           }
         }
       }
