@@ -57,23 +57,48 @@ impl Grid {
       cursor_pos: Point::new(0, 0),
     };
 
-    #[rustfmt::skip]
-    let square: Vec<u8> = vec![
-      0,  0,  1,  1,  1,  1,  1,  2,
-      0,  0,  0,  3,  3,  2,  2,  2,
-      4,  4,  4,  4,  3,  3,  7,  2,
-      5,  5,  4, 99, 99,  3,  7,  7,
-      9,  5,  5, 99, 99,  6,  6,  7,
-      9,  5, 10, 11, 11,  8,  6,  7,
-      9, 10, 10, 10, 11,  8,  6,  6,
-      9,  9, 10, 11, 11,  8,  8,  8,
-    ];
-    for (index, color) in square.into_iter().enumerate() {
-      if (color as usize) < CELL_COLORS.len() {
-        let col = index % 8;
-        let row = index / 8;
-        *grid.cell_mut(col, row) = Some(Cell { color });
-      }
+    let picture = "
+ 0  1
+00001
+22111
+2233
+ 23       B
+ 43      BB
+ 4377777BB
+ 44668999
+ 5468889AA
+555668 9A
+5      AA
+"
+    .to_string();
+    let mut col = 5;
+    let mut row = 5;
+    for (index, color) in picture.trim_matches('\n').chars().enumerate() {
+      let color_index = match color {
+        '0' => 0,
+        '1' => 1,
+        '2' => 2,
+        '3' => 3,
+        '4' => 4,
+        '5' => 5,
+        '6' => 6,
+        '7' => 7,
+        '8' => 8,
+        '9' => 9,
+        'A' => 10,
+        'B' => 11,
+        '\n' => {
+          col = 5;
+          row += 1;
+          continue;
+        }
+        _ => {
+          col += 1;
+          continue;
+        }
+      };
+      *grid.cell_mut(col, row) = Some(Cell { color: color_index });
+      col += 1;
     }
 
     grid
