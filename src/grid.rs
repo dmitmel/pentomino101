@@ -1,5 +1,5 @@
 use sdl2::event::Event;
-use sdl2::keyboard::{Keycode, Mod};
+use sdl2::keyboard::{Mod, Scancode};
 use sdl2::mouse::MouseButton;
 use sdl2::pixels::Color;
 use sdl2::rect::{Point, Rect};
@@ -231,20 +231,20 @@ impl Grid {
         self.cursor_pos = Point::new(x, y);
       }
 
-      Event::KeyDown { keycode: Some(keycode), keymod, .. } => {
+      Event::KeyDown { scancode: Some(scancode), keymod, .. } => {
         if let Some(current_cells) = self.current_cells.as_mut() {
           for (_, cell_pos) in current_cells {
-            *cell_pos = match (keycode, keymod) {
-              (Keycode::R, Mod::NOMOD) => {
+            *cell_pos = match (scancode, keymod) {
+              (Scancode::R, Mod::NOMOD) => {
                 Point::new(-cell_pos.y(), cell_pos.x())
               }
-              (Keycode::R, Mod::LSHIFTMOD) | (Keycode::R, Mod::RSHIFTMOD) => {
+              (Scancode::R, Mod::LSHIFTMOD) | (Scancode::R, Mod::RSHIFTMOD) => {
                 Point::new(cell_pos.y(), -cell_pos.x())
               }
-              (Keycode::V, Mod::NOMOD) => {
+              (Scancode::V, Mod::NOMOD) => {
                 Point::new(-cell_pos.x(), cell_pos.y())
               }
-              (Keycode::H, Mod::NOMOD) => {
+              (Scancode::H, Mod::NOMOD) => {
                 Point::new(cell_pos.x(), -cell_pos.y())
               }
               _ => *cell_pos,

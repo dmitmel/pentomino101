@@ -44,7 +44,7 @@ fn main() {
     .position_centered()
     .build()
     .unwrap();
-  let mut canvas = window.into_canvas().build().unwrap();
+  let mut canvas = window.into_canvas().present_vsync().build().unwrap();
 
   let mut event_pump = sdl_context.event_pump().unwrap();
 
