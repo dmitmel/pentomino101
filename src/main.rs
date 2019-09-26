@@ -1,5 +1,3 @@
-#![feature(duration_float)]
-
 extern crate nalgebra_glm as glm;
 extern crate sdl2;
 
@@ -67,9 +65,7 @@ fn main() {
       while let Some(event) = event_pump.poll_event() {
         match event {
           Event::Quit { .. }
-          | Event::KeyDown { keycode: Some(Keycode::Escape), .. } => {
-            break 'game_loop
-          }
+          | Event::KeyDown { keycode: Some(Keycode::Escape), .. } => break 'game_loop,
           Event::Window {
             win_event: WindowEvent::SizeChanged(width, height),
             ..
